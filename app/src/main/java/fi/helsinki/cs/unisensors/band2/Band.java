@@ -9,6 +9,7 @@ import android.util.Log;
 import com.microsoft.band.BandClient;
 import com.microsoft.band.BandClientManager;
 import com.microsoft.band.BandException;
+import com.microsoft.band.BandIOException;
 import com.microsoft.band.BandInfo;
 import com.microsoft.band.ConnectionState;
 import com.microsoft.band.UserConsent;
@@ -42,6 +43,17 @@ public class Band {
     @SuppressWarnings("unchecked")
     public static void requestHrConsent(Context context, TaskCallback callback, WeakReference<Activity> reference){
         new HrConsentTask(context, callback).execute(reference);
+    }
+
+    public static void disconnect(){
+        if (client != null) {
+            try {
+                client.getSensorManager().unregisterAllListeners();
+                client.disconnect().await();
+            } catch (InterruptedException | BandException e) {
+                // Do nothing as this is happening during destroy
+            }
+        }
     }
 
     private static void logBandException(BandException e){

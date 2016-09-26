@@ -81,6 +81,7 @@ public class BandService extends Service {
 
     @Override
     public void onDestroy() {
+        Band.disconnect();
         unregisterReceiver(hrConsentReceiver);
         super.onDestroy();
     }
@@ -99,6 +100,7 @@ public class BandService extends Service {
         Context baseContext = getBaseContext();
         Band.registerGsrListener(baseContext, gsrListener);
         Band.registerHrListener(baseContext, hrListener);
+        Band.registerRriListener(baseContext, rriListener);
         return super.onStartCommand(intent, flags, startId);
     }
 
