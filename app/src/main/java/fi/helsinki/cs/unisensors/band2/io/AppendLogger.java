@@ -1,4 +1,4 @@
-package fi.helsinki.cs.unisensors.band2;
+package fi.helsinki.cs.unisensors.band2.io;
 
 import android.content.Context;
 import android.os.Environment;
@@ -6,6 +6,8 @@ import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
+
+import fi.helsinki.cs.unisensors.band2.R;
 
 public class AppendLogger {
     private final String TAG = this.getClass().getCanonicalName();

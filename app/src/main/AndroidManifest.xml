@@ -17,7 +17,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".ConsentActivity"
-            android:theme="@style/Theme.AppCompat.Translucent" />
+            android:theme="@style/Theme.AppCompat.Translucent"
+            android:noHistory="true"/>
         <service android:name=".BandService" />
     </application>
 

@@ -99,7 +99,7 @@ public class BandService extends Service {
     }
 
     private void updateNotification(){
-        String status = "GSR: " + skinResponse + " kOhm HR: " + heartRate;
+        String status = "GSR: " + skinResponse + " k\u2126 HR: " + heartRate;
         mNotificationManager.notify(ID, getPersistentServiceNotification(status));
     }
 

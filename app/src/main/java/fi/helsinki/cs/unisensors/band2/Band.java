@@ -1,11 +1,9 @@
 package fi.helsinki.cs.unisensors.band2;
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.os.Bundle;
 import android.util.Log;
 
 import com.microsoft.band.BandClient;
@@ -36,8 +34,8 @@ public class Band {
     }
 
     @SuppressWarnings("unchecked")
-    public static void requestHrConsent(Context context, WeakReference<Activity> reference){
-        new HrConsentTask(context).execute(reference);
+    public static void requestHrConsent(Context context, TaskCallback callback, WeakReference<Activity> reference){
+        new HrConsentTask(context, callback).execute(reference);
     }
 
     private static void logBandException(BandException e){
@@ -65,7 +63,6 @@ public class Band {
             }
             client = BandClientManager.getInstance().create(context, devices[0]);
         } else if (ConnectionState.CONNECTED == client.getConnectionState()) {
-            Log.d(TAG, "Already connected to band!");
             return true;
         }
         Log.d(TAG, "Connecting to band..");
@@ -150,9 +147,11 @@ public class Band {
 
     private static class HrConsentTask extends AsyncTask<WeakReference<Activity>, Void, Void> {
         private Context context;
+        private TaskCallback callback;
 
-        HrConsentTask(Context context){
+        HrConsentTask(Context context, TaskCallback callback){
             this.context = context;
+            this.callback = callback;
         }
 
         @SafeVarargs
@@ -167,6 +166,7 @@ public class Band {
                                 Intent consent = new Intent(Band.CONSENT);
                                 consent.putExtra("consent", consentGiven);
                                 context.sendBroadcast(consent);
+                                callback.signalFinished();
                             }
                         });
                     }
