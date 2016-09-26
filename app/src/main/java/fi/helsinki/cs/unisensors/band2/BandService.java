@@ -4,13 +4,16 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
-import com.microsoft.band.BandClient;
 import com.microsoft.band.sensors.BandGsrEvent;
 import com.microsoft.band.sensors.BandGsrEventListener;
 import com.microsoft.band.sensors.BandHeartRateEvent;
@@ -21,7 +24,19 @@ public class BandService extends Service {
     private final int ID = 42;
     private NotificationManager mNotificationManager;
     private int skinResponse, heartRate;
-
+    private BroadcastReceiver hrConsentReceiver = new BroadcastReceiver(){
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Bundle extras = intent.getExtras();
+            boolean consented = extras.getBoolean("consent");
+            if(consented){
+                Log.d(TAG, "User allowed monitoring Heart Rate");
+                Band.registerHrListener(context, hrListener);
+            } else {
+                Log.d(TAG, "User denied monitoring Heart Rate");
+            }
+        }
+    };
 
     private BandGsrEventListener gsrListener = new BandGsrEventListener() {
         @Override
@@ -42,6 +57,18 @@ public class BandService extends Service {
         }
     };
 
+    @Override
+    public void onCreate() {
+        registerReceiver(hrConsentReceiver, new IntentFilter(Band.CONSENT));
+        super.onCreate();
+    }
+
+    @Override
+    public void onDestroy() {
+        unregisterReceiver(hrConsentReceiver);
+        super.onDestroy();
+    }
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -53,7 +80,7 @@ public class BandService extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.ic_battery_charging_full_white_24dp)
-                .setContentTitle("UniSensors: Band2 Monitor")
+                .setContentTitle("UniSensors: Band2")
                 .setContentText(status)
                 .setOngoing(true)
                 .setContentIntent(activityIntent);
@@ -72,7 +99,7 @@ public class BandService extends Service {
     }
 
     private void updateNotification(){
-        String status = "GSR: " + skinResponse + " kOhm, HR: " + heartRate;
+        String status = "GSR: " + skinResponse + " kOhm HR: " + heartRate;
         mNotificationManager.notify(ID, getPersistentServiceNotification(status));
     }
 

@@ -1,8 +1,11 @@
 package fi.helsinki.cs.unisensors.band2;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.util.Log;
 
 import com.microsoft.band.BandClient;
@@ -19,6 +22,7 @@ import com.microsoft.band.sensors.HeartRateConsentListener;
 import java.lang.ref.WeakReference;
 
 public class Band {
+    public final static String CONSENT = "fi.helsinki.cs.unisensors.band2.CONSENT";
     private static String TAG = Band.class.getSimpleName();
     private static BandClient client;
     private final static String ERR_NOT_CONNECTED = "Band not connected or within reach of bluetooth!";
@@ -29,6 +33,11 @@ public class Band {
 
     public static void registerHrListener(Context context, BandHeartRateEventListener listener){
         new HrSubscriptionTask(context, listener).execute();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static void requestHrConsent(Context context, WeakReference<Activity> reference){
+        new HrConsentTask(context).execute(reference);
     }
 
     private static void logBandException(BandException e){
@@ -98,6 +107,7 @@ public class Band {
     private static class HrSubscriptionTask extends AsyncTask<Void, Void, Void> {
         private Context context;
         private BandHeartRateEventListener listener;
+        private boolean consented;
 
         HrSubscriptionTask(Context context, BandHeartRateEventListener listener){
             this.context = context;
@@ -109,8 +119,10 @@ public class Band {
             try {
                 if (getConnectedBandClient(context)) {
                     if (client.getSensorManager().getCurrentHeartRateConsent() == UserConsent.GRANTED) {
+                        consented = true;
                         client.getSensorManager().registerHeartRateEventListener(listener);
                     } else {
+                        consented = false;
                         Log.e(TAG, "Heart rate permission missing!");
                     }
                 } else {
@@ -118,21 +130,29 @@ public class Band {
                 }
             } catch (BandException e) {
                 logBandException(e);
-
             } catch (Exception e) {
                 Log.e(TAG, e.getMessage());
             }
             return null;
         }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            if(!consented){
+                Intent consentIntent = new Intent(context, ConsentActivity.class);
+                consentIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(consentIntent);
+                //new HrSubscriptionTask(context, listener).execute();
+            }
+            super.onPostExecute(aVoid);
+        }
     }
 
     private static class HrConsentTask extends AsyncTask<WeakReference<Activity>, Void, Void> {
         private Context context;
-        private BandGsrEventListener listener;
 
-        HrConsentTask(Context context, BandGsrEventListener listener){
+        HrConsentTask(Context context){
             this.context = context;
-            this.listener = listener;
         }
 
         @SafeVarargs
@@ -144,7 +164,9 @@ public class Band {
                         client.getSensorManager().requestHeartRateConsent(params[0].get(), new HeartRateConsentListener() {
                             @Override
                             public void userAccepted(boolean consentGiven) {
-                                Log.d(TAG, "Consent given for Heart Rate!");
+                                Intent consent = new Intent(Band.CONSENT);
+                                consent.putExtra("consent", consentGiven);
+                                context.sendBroadcast(consent);
                             }
                         });
                     }
