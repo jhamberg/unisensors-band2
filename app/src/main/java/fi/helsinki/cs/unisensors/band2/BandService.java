@@ -21,6 +21,8 @@ import com.microsoft.band.sensors.BandHeartRateEventListener;
 import com.microsoft.band.sensors.BandRRIntervalEvent;
 import com.microsoft.band.sensors.BandRRIntervalEventListener;
 
+import java.util.Locale;
+
 public class BandService extends Service {
     private final String TAG = this.getClass().getSimpleName();
     private final int ID = 32478611;
@@ -66,7 +68,6 @@ public class BandService extends Service {
         @Override
         public void onBandRRIntervalChanged(final BandRRIntervalEvent event) {
             if (event != null) {
-                Log.d(TAG, "New event: " + event.toString());
                 rrInterval = event.getInterval();
                 updateNotification();
             }
@@ -83,6 +84,7 @@ public class BandService extends Service {
     public void onDestroy() {
         Band.disconnect();
         unregisterReceiver(hrConsentReceiver);
+        mNotificationManager.cancel(ID);
         super.onDestroy();
     }
 
@@ -109,7 +111,7 @@ public class BandService extends Service {
         PendingIntent activityIntent = PendingIntent.getActivity(this, 0, notificationIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
-                .setSmallIcon(R.drawable.ic_battery_charging_full_white_24dp)
+                .setSmallIcon(R.drawable.ic_watch_white_24dp)
                 .setContentTitle("UniSensors: Band2")
                 .setContentText(status)
                 .setOngoing(true)
@@ -121,7 +123,7 @@ public class BandService extends Service {
         String status =
                 "GSR: " + skinResponse +
                 " k\u2126 HR: " + heartRate +
-                " RR: " + rrInterval;
+                String.format(Locale.US, " RR: %.2f", rrInterval);
         mNotificationManager.notify(ID, getPersistentServiceNotification(status));
     }
 

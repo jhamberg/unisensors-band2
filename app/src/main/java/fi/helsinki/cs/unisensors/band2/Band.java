@@ -9,13 +9,11 @@ import android.util.Log;
 import com.microsoft.band.BandClient;
 import com.microsoft.band.BandClientManager;
 import com.microsoft.band.BandException;
-import com.microsoft.band.BandIOException;
 import com.microsoft.band.BandInfo;
 import com.microsoft.band.ConnectionState;
 import com.microsoft.band.UserConsent;
 import com.microsoft.band.sensors.BandGsrEventListener;
 import com.microsoft.band.sensors.BandHeartRateEventListener;
-import com.microsoft.band.sensors.BandRRIntervalEvent;
 import com.microsoft.band.sensors.BandRRIntervalEventListener;
 import com.microsoft.band.sensors.GsrSampleRate;
 import com.microsoft.band.sensors.HeartRateConsentListener;
@@ -45,7 +43,8 @@ public class Band {
         new HrConsentTask(context, callback).execute(reference);
     }
 
-    public static void disconnect(){
+    public static
+    void disconnect(){
         if (client != null) {
             try {
                 client.getSensorManager().unregisterAllListeners();

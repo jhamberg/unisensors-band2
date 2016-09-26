@@ -7,7 +7,6 @@ import android.util.Log;
 
 import java.lang.ref.WeakReference;
 
-
 public class ConsentActivity extends AppCompatActivity implements TaskCallback {
     private final String TAG = ConsentActivity.class.getSimpleName();
 
