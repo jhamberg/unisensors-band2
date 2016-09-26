@@ -14,6 +14,8 @@ import com.microsoft.band.ConnectionState;
 import com.microsoft.band.UserConsent;
 import com.microsoft.band.sensors.BandGsrEventListener;
 import com.microsoft.band.sensors.BandHeartRateEventListener;
+import com.microsoft.band.sensors.BandRRIntervalEvent;
+import com.microsoft.band.sensors.BandRRIntervalEventListener;
 import com.microsoft.band.sensors.GsrSampleRate;
 import com.microsoft.band.sensors.HeartRateConsentListener;
 
@@ -31,6 +33,10 @@ public class Band {
 
     public static void registerHrListener(Context context, BandHeartRateEventListener listener){
         new HrSubscriptionTask(context, listener).execute();
+    }
+
+    public static void registerRriListener(Context context, BandRRIntervalEventListener listener){
+        new RriSubscriptionTask(context, listener).execute();
     }
 
     @SuppressWarnings("unchecked")
@@ -139,7 +145,54 @@ public class Band {
                 Intent consentIntent = new Intent(context, ConsentActivity.class);
                 consentIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(consentIntent);
-                //new HrSubscriptionTask(context, listener).execute();
+            }
+            super.onPostExecute(aVoid);
+        }
+    }
+
+    private static class RriSubscriptionTask extends AsyncTask<Void, Void, Void> {
+        private Context context;
+        private BandRRIntervalEventListener listener;
+        private boolean consented;
+
+        RriSubscriptionTask(Context context, BandRRIntervalEventListener listener){
+            this.context = context;
+            this.listener = listener;
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            try {
+                if (getConnectedBandClient(context)) {
+                    int hardwareVersion = Integer.parseInt(client.getHardwareVersion().await());
+                    if (hardwareVersion >= 20) {
+                        if (client.getSensorManager().getCurrentHeartRateConsent() == UserConsent.GRANTED) {
+                            client.getSensorManager().registerRRIntervalEventListener(listener);
+                            consented = true;
+                        } else {
+                           consented = false;
+                        }
+                    } else {
+                        Log.e(TAG, "RR interval cannot be measured on Band 1");
+                    }
+                } else {
+                    Log.e(TAG, ERR_NOT_CONNECTED);
+                }
+            } catch (BandException e) {
+                logBandException(e);
+
+            } catch (Exception e) {
+                Log.e(TAG, e.getMessage());
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            if(!consented){
+                Intent consentIntent = new Intent(context, ConsentActivity.class);
+                consentIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(consentIntent);
             }
             super.onPostExecute(aVoid);
         }

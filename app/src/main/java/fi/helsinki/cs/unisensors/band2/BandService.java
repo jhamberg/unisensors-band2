@@ -18,12 +18,16 @@ import com.microsoft.band.sensors.BandGsrEvent;
 import com.microsoft.band.sensors.BandGsrEventListener;
 import com.microsoft.band.sensors.BandHeartRateEvent;
 import com.microsoft.band.sensors.BandHeartRateEventListener;
+import com.microsoft.band.sensors.BandRRIntervalEvent;
+import com.microsoft.band.sensors.BandRRIntervalEventListener;
 
 public class BandService extends Service {
     private final String TAG = this.getClass().getSimpleName();
-    private final int ID = 42;
+    private final int ID = 32478611;
     private NotificationManager mNotificationManager;
     private int skinResponse, heartRate;
+    private double rrInterval;
+
     private BroadcastReceiver hrConsentReceiver = new BroadcastReceiver(){
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -32,6 +36,7 @@ public class BandService extends Service {
             if(consented){
                 Log.d(TAG, "User allowed monitoring Heart Rate");
                 Band.registerHrListener(context, hrListener);
+                Band.registerRriListener(context, rriListener);
             } else {
                 Log.d(TAG, "User denied monitoring Heart Rate");
             }
@@ -57,6 +62,17 @@ public class BandService extends Service {
         }
     };
 
+    private BandRRIntervalEventListener rriListener = new BandRRIntervalEventListener() {
+        @Override
+        public void onBandRRIntervalChanged(final BandRRIntervalEvent event) {
+            if (event != null) {
+                Log.d(TAG, "New event: " + event.toString());
+                rrInterval = event.getInterval();
+                updateNotification();
+            }
+        }
+    };
+
     @Override
     public void onCreate() {
         registerReceiver(hrConsentReceiver, new IntentFilter(Band.CONSENT));
@@ -74,6 +90,18 @@ public class BandService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        startForeground(ID, getPersistentServiceNotification("Initializing.."));
+        mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        Context baseContext = getBaseContext();
+        Band.registerGsrListener(baseContext, gsrListener);
+        Band.registerHrListener(baseContext, hrListener);
+        return super.onStartCommand(intent, flags, startId);
+    }
+
     public Notification getPersistentServiceNotification(String status){
         Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent activityIntent = PendingIntent.getActivity(this, 0, notificationIntent,
@@ -87,19 +115,11 @@ public class BandService extends Service {
         return builder.build();
     }
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        startForeground(ID, getPersistentServiceNotification("Initializing.."));
-        mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-        Context baseContext = getBaseContext();
-        Band.registerGsrListener(baseContext, gsrListener);
-        Band.registerHrListener(baseContext, hrListener);
-        return super.onStartCommand(intent, flags, startId);
-    }
-
     private void updateNotification(){
-        String status = "GSR: " + skinResponse + " k\u2126 HR: " + heartRate;
+        String status =
+                "GSR: " + skinResponse +
+                " k\u2126 HR: " + heartRate +
+                " RR: " + rrInterval;
         mNotificationManager.notify(ID, getPersistentServiceNotification(status));
     }
 
