@@ -2,11 +2,11 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 24
-    buildToolsVersion "24.0.1"
+    buildToolsVersion "24.0.2"
     defaultConfig {
         applicationId "fi.helsinki.cs.unisensors.band2"
         minSdkVersion 17
-        targetSdkVersion 24
+        targetSdkVersion 22 // To avoid permission prompts
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
