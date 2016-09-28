@@ -3,4 +3,8 @@
     <string name="logging">Logging</string>
     <string name="start">Start</string>
     <string name="stop">Stop</string>
+    <string name="galvanic_skin_response">Galvanic Skin Response (k\u2126)</string>
+    <string name="heart_rate_bpm">Heart rate (bpm)</string>
+    <string name="inter_beat_rr_interval_s">Inter-beat (RR) interval (s)</string>
+    <string name="gsr">GSR</string>
 </resources>

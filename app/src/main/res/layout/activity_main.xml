@@ -17,4 +17,29 @@
         android:id="@+id/serviceButton"
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true" />
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/galvanic_skin_response"
+        android:id="@+id/gsrBox"
+        android:layout_alignParentStart="true" />
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/heart_rate_bpm"
+        android:id="@+id/hrBox"
+        android:layout_below="@+id/gsrBox"
+        android:layout_alignParentStart="true" />
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/inter_beat_rr_interval_s"
+        android:id="@+id/rrBox"
+        android:checked="false"
+        android:layout_below="@+id/hrBox"
+        android:layout_alignParentStart="true" />
+
 </RelativeLayout>

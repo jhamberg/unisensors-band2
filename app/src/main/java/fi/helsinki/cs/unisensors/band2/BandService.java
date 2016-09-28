@@ -23,10 +23,13 @@ import com.microsoft.band.sensors.BandRRIntervalEventListener;
 
 import java.util.Locale;
 
+import fi.helsinki.cs.unisensors.band2.io.AppendLogger;
+
 public class BandService extends Service {
     private final String TAG = this.getClass().getSimpleName();
     private final int ID = 32478611;
     private NotificationManager mNotificationManager;
+    private AppendLogger mAppendLogger;
     private int skinResponse, heartRate;
     private double rrInterval;
 
@@ -50,7 +53,7 @@ public class BandService extends Service {
         public void onBandGsrChanged(final BandGsrEvent event) {
             if (event != null) {
                 skinResponse = event.getResistance();
-                updateNotification();
+                registerEvent();
             }
         }
     };
@@ -59,7 +62,7 @@ public class BandService extends Service {
         public void onBandHeartRateChanged(final BandHeartRateEvent event) {
             if (event != null) {
                 heartRate = event.getHeartRate();
-                updateNotification();
+                registerEvent();
             }
         }
     };
@@ -69,7 +72,7 @@ public class BandService extends Service {
         public void onBandRRIntervalChanged(final BandRRIntervalEvent event) {
             if (event != null) {
                 rrInterval = event.getInterval();
-                updateNotification();
+                registerEvent();
             }
         }
     };
@@ -119,7 +122,13 @@ public class BandService extends Service {
         return builder.build();
     }
 
-    private void updateNotification(){
+    private void registerEvent(){
+        //mAppendLogger = new AppendLogger(getBaseContext(), )
+        updateStatus();
+    }
+
+
+    private void updateStatus(){
         String status =
                 "GSR: " + skinResponse +
                 " k\u2126 HR: " + heartRate +
