@@ -36,12 +36,30 @@
             android:layout_below="@+id/hrBox"
             android:layout_alignParentStart="true" />
 
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/gyroscope"
+            android:id="@+id/gyroBox"
+            android:checked="false"
+            android:layout_below="@+id/rrBox"
+            android:layout_alignParentStart="true" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/accelerometer"
+            android:id="@+id/accBox"
+            android:checked="false"
+            android:layout_below="@+id/gyroBox"
+            android:layout_alignParentStart="true" />
+
         <Button
             android:text="@string/start"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/serviceButton"
-            android:layout_below="@+id/rrBox"
+            android:layout_below="@+id/accBox"
             android:layout_alignParentStart="true" />
 
     </RelativeLayout>

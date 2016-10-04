@@ -12,11 +12,14 @@ import com.microsoft.band.BandException;
 import com.microsoft.band.BandInfo;
 import com.microsoft.band.ConnectionState;
 import com.microsoft.band.UserConsent;
+import com.microsoft.band.sensors.BandAccelerometerEventListener;
 import com.microsoft.band.sensors.BandGsrEventListener;
+import com.microsoft.band.sensors.BandGyroscopeEventListener;
 import com.microsoft.band.sensors.BandHeartRateEventListener;
 import com.microsoft.band.sensors.BandRRIntervalEventListener;
 import com.microsoft.band.sensors.GsrSampleRate;
 import com.microsoft.band.sensors.HeartRateConsentListener;
+import com.microsoft.band.sensors.SampleRate;
 
 import java.lang.ref.WeakReference;
 
@@ -36,6 +39,14 @@ public class Band {
 
     public static void registerRriListener(Context context, BandRRIntervalEventListener listener){
         new RriSubscriptionTask(context, listener).execute();
+    }
+
+    public static void registerGyroListener(Context context, BandGyroscopeEventListener listener){
+        new GyroSubscriptionTask(context, listener).execute();
+    }
+
+    public static void registerAccListener(Context context, BandAccelerometerEventListener listener){
+        new AccelerometerSubscriptionTask(context, listener).execute();
     }
 
     @SuppressWarnings("unchecked")
@@ -206,6 +217,58 @@ public class Band {
                 context.startActivity(consentIntent);
             }
             super.onPostExecute(aVoid);
+        }
+    }
+
+    private static class GyroSubscriptionTask extends AsyncTask<Void, Void, Void> {
+        private Context context;
+        private BandGyroscopeEventListener listener;
+
+        GyroSubscriptionTask(Context context, BandGyroscopeEventListener listener){
+            this.context = context;
+            this.listener = listener;
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            try {
+                if (getConnectedBandClient(context)) {
+                    client.getSensorManager().registerGyroscopeEventListener(listener, SampleRate.MS16);
+                } else {
+                    Log.e(TAG, ERR_NOT_CONNECTED);
+                }
+            } catch (BandException e) {
+                logBandException(e);
+            } catch (Exception e) {
+                Log.e(TAG, "Generic error when subscribing to Gyro: " + e.getMessage());
+            }
+            return null;
+        }
+    }
+
+    private static class AccelerometerSubscriptionTask extends AsyncTask<Void, Void, Void> {
+        private Context context;
+        private BandAccelerometerEventListener listener;
+
+        AccelerometerSubscriptionTask(Context context, BandAccelerometerEventListener listener){
+            this.context = context;
+            this.listener = listener;
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            try {
+                if (getConnectedBandClient(context)) {
+                    client.getSensorManager().registerAccelerometerEventListener(listener, SampleRate.MS16);
+                } else {
+                    Log.e(TAG, ERR_NOT_CONNECTED);
+                }
+            } catch (BandException e) {
+                logBandException(e);
+            } catch (Exception e) {
+                Log.e(TAG, "Generic error when subscribing to Gyro: " + e.getMessage());
+            }
+            return null;
         }
     }
 

@@ -66,6 +66,8 @@ public class MainActivity extends AppCompatActivity {
         editor.putBoolean("gsr", selection[0]);
         editor.putBoolean("hr", selection[1]);
         editor.putBoolean("rr", selection[2]);
+        editor.putBoolean("gyro", selection[3]);
+        editor.putBoolean("acc", selection[4]);
         editor.apply();
     }
 
@@ -73,14 +75,19 @@ public class MainActivity extends AppCompatActivity {
         view.gsrBox.setChecked(preferences.getBoolean("gsr", false));
         view.hrBox.setChecked(preferences.getBoolean("hr", false));
         view.rrBox.setChecked(preferences.getBoolean("rr", false));
+        view.gyroBox.setChecked(preferences.getBoolean("gyro", false));
+        view.accBox.setChecked(preferences.getBoolean("acc", false));
     }
 
     public boolean[] getSensorSelection(){
         return new boolean[]{
                 view.gsrBox.isChecked(),
                 view.hrBox.isChecked(),
-                view.rrBox.isChecked()};
+                view.rrBox.isChecked(),
+                view.gyroBox.isChecked(),
+                view.accBox.isChecked()};
     }
+
 
     public void updateButtonState(boolean running){
         view.serviceButton.setText(running ? R.string.stop : R.string.start);

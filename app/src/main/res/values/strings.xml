@@ -7,4 +7,6 @@
     <string name="heart_rate_bpm">Heart rate (bpm)</string>
     <string name="inter_beat_rr_interval_s">RR-interval (s)</string>
     <string name="gsr">GSR</string>
+    <string name="gyroscope">Gyroscope</string>
+    <string name="accelerometer">Accelerometer</string>
 </resources>

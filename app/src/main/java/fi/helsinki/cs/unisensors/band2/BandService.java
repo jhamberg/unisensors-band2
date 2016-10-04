@@ -14,30 +14,38 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import com.microsoft.band.sensors.BandAccelerometerEvent;
+import com.microsoft.band.sensors.BandAccelerometerEventListener;
 import com.microsoft.band.sensors.BandGsrEvent;
 import com.microsoft.band.sensors.BandGsrEventListener;
+import com.microsoft.band.sensors.BandGyroscopeEvent;
+import com.microsoft.band.sensors.BandGyroscopeEventListener;
 import com.microsoft.band.sensors.BandHeartRateEvent;
 import com.microsoft.band.sensors.BandHeartRateEventListener;
 import com.microsoft.band.sensors.BandRRIntervalEvent;
 import com.microsoft.band.sensors.BandRRIntervalEventListener;
 import com.microsoft.band.sensors.HeartRateQuality;
 
-import java.util.ArrayList;
 import java.util.Locale;
 
 import fi.helsinki.cs.unisensors.band2.io.AppendLogger;
 
+@SuppressWarnings("FieldCanBeLocal")
 public class BandService extends Service {
     private final String TAG = this.getClass().getSimpleName();
     private final String DELIM = ";";
     private final int ID = 32478611;
     private NotificationManager mNotificationManager;
-    private AppendLogger mGsrLogger, mHrLogger, mRrLogger;
-    private int skinResponse, heartRate, heartRateQuality;
+    private int skinResponse, heartRate;
+    private AppendLogger mGsrLogger, mHrLogger, mRrLogger, mGyroLogger, mAccLogger;
+    private float accX, accY, accZ;
+    private float gyroaccX, gryoaccY, gryoaccZ, angvelX, angvelY, angvelZ;
     private double rrInterval;
     private boolean gsr = false;
     private boolean hr = false;
     private boolean rr = false;
+    private boolean gyro = false;
+    private boolean acc = false;
 
     private BroadcastReceiver hrConsentReceiver = new BroadcastReceiver(){
         @Override
@@ -94,6 +102,36 @@ public class BandService extends Service {
         }
     };
 
+    private BandGyroscopeEventListener gyroListener = new BandGyroscopeEventListener() {
+        @Override
+        public void onBandGyroscopeChanged(BandGyroscopeEvent event) {
+            if(event != null){
+                String t = System.currentTimeMillis() + "";
+                gyroaccX = event.getAccelerationX();
+                gryoaccY = event.getAccelerationY();
+                gryoaccZ = event.getAccelerationZ();
+                angvelX = event.getAngularVelocityX();
+                angvelY = event.getAngularVelocityY();
+                angvelZ = event.getAngularVelocityZ();
+                mGyroLogger.log(t, gyroaccX +"", gryoaccY +"", gryoaccZ +"",
+                                angvelX+"", angvelY +"", angvelZ +"");
+            }
+        }
+    };
+
+    private BandAccelerometerEventListener accListener = new BandAccelerometerEventListener() {
+        @Override
+        public void onBandAccelerometerChanged(BandAccelerometerEvent event) {
+            if(event != null){
+                String t = System.currentTimeMillis() + "";
+                accX = event.getAccelerationX();
+                accY = event.getAccelerationY();
+                accZ = event.getAccelerationZ();
+                mAccLogger.log(t, accX+"", accY+"", accZ+"");
+            }
+        }
+    };
+
     @Override
     public void onCreate() {
         registerReceiver(hrConsentReceiver, new IntentFilter(Band.CONSENT));
@@ -118,28 +156,39 @@ public class BandService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         startForeground(ID, getPersistentServiceNotification("Initializing.."));
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        Context baseContext = getBaseContext();
         if(intent.hasExtra("sensors")){
             boolean[] selection = intent.getBooleanArrayExtra("sensors");
-            gsr = selection[0];
-            hr = selection[1];
-            rr = selection[2];
-            Log.d(TAG, "Gsr: " + gsr + " Hr: " + hr + " Rr: " + rr);
-            long t = System.currentTimeMillis();
-            if(gsr){
-                Band.registerGsrListener(baseContext, gsrListener);
-                mGsrLogger = new AppendLogger(getBaseContext(), "gsr", t, DELIM);
-            }
-            if(hr){
-                Band.registerHrListener(baseContext, hrListener);
-                mHrLogger = new AppendLogger(getBaseContext(), "hr", t, DELIM);
-            }
-            if(rr){
-                Band.registerRriListener(baseContext, rriListener);
-                mRrLogger = new AppendLogger(getBaseContext(), "rr", t, DELIM);
-            }
+            registerListeners(selection);
         }
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    public void registerListeners(boolean[] selection){
+        Context baseContext = getBaseContext();
+        gsr = selection[0];
+        hr = selection[1];
+        rr = selection[2];
+        gyro = selection[3];
+        acc = selection[4];
+
+        long t = System.currentTimeMillis();
+        if(gsr){
+            Band.registerGsrListener(baseContext, gsrListener);
+            mGsrLogger = new AppendLogger(getBaseContext(), "gsr", t, DELIM);
+        } if(hr){
+            Band.registerHrListener(baseContext, hrListener);
+            mHrLogger = new AppendLogger(getBaseContext(), "hr", t, DELIM);
+        } if(rr){
+            Band.registerRriListener(baseContext, rriListener);
+            mRrLogger = new AppendLogger(getBaseContext(), "rr", t, DELIM);
+        } if(gyro){
+            Band.registerGyroListener(baseContext, gyroListener);
+            mGyroLogger = new AppendLogger(getBaseContext(), "gyro", t, DELIM);
+        } if(acc){
+            Band.registerAccListener(baseContext, accListener);
+            mAccLogger = new AppendLogger(getBaseContext(), "acc", t, DELIM);
+        }
+
     }
 
     public Notification getPersistentServiceNotification(String status){
@@ -160,7 +209,7 @@ public class BandService extends Service {
         String status =
                 (gsr ? "GSR: " + skinResponse + " k\u2126 ": "") +
                 (hr ? "HR: " + heartRate + " ": "") +
-                (rr ? String.format(Locale.US, "RR: %.2f", rrInterval) : "");
+                (rr ? String.format(Locale.US, "RR: %.2f ", rrInterval) : "");
         mNotificationManager.notify(ID, getPersistentServiceNotification(status));
     }
 
