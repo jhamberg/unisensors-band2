@@ -10,14 +10,6 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="fi.helsinki.cs.unisensors.band2.MainActivity">
 
-    <Button
-        android:text="@string/start"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/serviceButton"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true" />
-
     <CheckBox
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -40,6 +32,14 @@
         android:id="@+id/rrBox"
         android:checked="false"
         android:layout_below="@+id/hrBox"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:text="@string/start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/serviceButton"
+        android:layout_below="@+id/rrBox"
         android:layout_alignParentStart="true" />
 
 </RelativeLayout>

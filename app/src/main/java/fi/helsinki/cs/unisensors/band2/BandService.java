@@ -21,6 +21,7 @@ import com.microsoft.band.sensors.BandHeartRateEventListener;
 import com.microsoft.band.sensors.BandRRIntervalEvent;
 import com.microsoft.band.sensors.BandRRIntervalEventListener;
 
+import java.util.ArrayList;
 import java.util.Locale;
 
 import fi.helsinki.cs.unisensors.band2.io.AppendLogger;
@@ -32,6 +33,9 @@ public class BandService extends Service {
     private AppendLogger mAppendLogger;
     private int skinResponse, heartRate;
     private double rrInterval;
+    private boolean gsr = false;
+    private boolean hr = false;
+    private boolean rr = false;
 
     private BroadcastReceiver hrConsentReceiver = new BroadcastReceiver(){
         @Override
@@ -87,6 +91,7 @@ public class BandService extends Service {
     public void onDestroy() {
         Band.disconnect();
         unregisterReceiver(hrConsentReceiver);
+        mAppendLogger.finish();
         mNotificationManager.cancel(ID);
         super.onDestroy();
     }
@@ -101,11 +106,18 @@ public class BandService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         startForeground(ID, getPersistentServiceNotification("Initializing.."));
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
         Context baseContext = getBaseContext();
-        Band.registerGsrListener(baseContext, gsrListener);
-        Band.registerHrListener(baseContext, hrListener);
-        Band.registerRriListener(baseContext, rriListener);
+        if(intent.hasExtra("sensors")){
+            boolean[] selection = intent.getBooleanArrayExtra("sensors");
+            gsr = selection[0];
+            hr = selection[1];
+            rr = selection[2];
+            if(gsr) Band.registerGsrListener(baseContext, gsrListener);
+            if(hr)  Band.registerHrListener(baseContext, hrListener);
+            if(rr)  Band.registerRriListener(baseContext, rriListener);
+        }
+        String filename = constructFileName();
+        mAppendLogger = new AppendLogger(getBaseContext(), filename, ";");
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -115,7 +127,7 @@ public class BandService extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.ic_watch_white_24dp)
-                .setContentTitle("UniSensors: Band2")
+                .setContentTitle(getString(R.string.app_name))
                 .setContentText(status)
                 .setOngoing(true)
                 .setContentIntent(activityIntent);
@@ -123,16 +135,31 @@ public class BandService extends Service {
     }
 
     private void registerEvent(){
-        //mAppendLogger = new AppendLogger(getBaseContext(), )
+        ArrayList<String> toLog = new ArrayList<>();
+        toLog.add(System.currentTimeMillis() + "");
+        if(gsr) toLog.add(skinResponse + "");
+        if(hr) toLog.add(heartRate + "");
+        if(rr) toLog.add(rrInterval + "");
+        mAppendLogger.log(toLog.toArray(new String[toLog.size()]));
         updateStatus();
+    }
+
+    private String constructFileName(){
+        String filename = "";
+        if(gsr) filename += "gsr-";
+        if(hr) filename += "hr-";
+        if(rr) filename += "rr-";
+
+        // Remove last hyphen
+        return filename.substring(0,filename.length()-1);
     }
 
 
     private void updateStatus(){
         String status =
-                "GSR: " + skinResponse +
-                " k\u2126 HR: " + heartRate +
-                String.format(Locale.US, " RR: %.2f", rrInterval);
+                (gsr ? "GSR: " + skinResponse + " k\u2126 ": "") +
+                (hr ? "HR: " + heartRate + " ": "") +
+                (rr ? String.format(Locale.US, "RR: %.2f", rrInterval) : "");
         mNotificationManager.notify(ID, getPersistentServiceNotification(status));
     }
 

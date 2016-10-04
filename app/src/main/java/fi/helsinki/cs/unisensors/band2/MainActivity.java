@@ -1,10 +1,9 @@
 package fi.helsinki.cs.unisensors.band2;
 
 import android.content.Intent;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -13,21 +12,21 @@ import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = this.getClass().getSimpleName();
-    private HashMap<String, Boolean> choices;
 
     private Class service;
     private Intent serviceIntent;
     private Button serviceButton;
-    private CheckBox gsr, hr, rr;
+    private CheckBox gsrCheckbox, hrCheckbox, rrCheckbox;
+    private boolean gsr, hr, rr;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         serviceButton = (Button) findViewById(R.id.serviceButton);
-        gsr = (CheckBox) findViewById(R.id.gsrBox);
-        hr = (CheckBox) findViewById(R.id.hrBox);
-        rr = (CheckBox) findViewById(R.id.rrBox);
+        gsrCheckbox = (CheckBox) findViewById(R.id.gsrBox);
+        hrCheckbox = (CheckBox) findViewById(R.id.hrBox);
+        rrCheckbox = (CheckBox) findViewById(R.id.rrBox);
 
         service = BandService.class;
         serviceIntent = new Intent(MainActivity.this, service);
@@ -40,17 +39,26 @@ public class MainActivity extends AppCompatActivity {
                 boolean running = isServiceRunning();
                 if(running){
                     stopService(serviceIntent);
+                    updateButtonState(false);
                 } else {
-                    updateChoices();
-                    startService(serviceIntent);
+                    boolean[] selection = getSensorSelection();
+                    for(boolean value : selection){
+                        if(value){
+                            serviceIntent.putExtra("sensors", selection);
+                            startService(serviceIntent);
+                            updateButtonState(true);
+                        }
+                    }
                 }
-                updateButtonState(!running);
             }
         });
     }
 
-    public void updateChoices(){
-
+    public boolean[] getSensorSelection(){
+        gsr = gsrCheckbox.isChecked();
+        hr = hrCheckbox.isChecked();
+        rr = rrCheckbox.isChecked();
+        return new boolean[]{gsr, hr, rr};
     }
 
     public void updateButtonState(boolean running){
