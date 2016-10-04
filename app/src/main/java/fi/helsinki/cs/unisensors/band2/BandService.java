@@ -20,6 +20,7 @@ import com.microsoft.band.sensors.BandHeartRateEvent;
 import com.microsoft.band.sensors.BandHeartRateEventListener;
 import com.microsoft.band.sensors.BandRRIntervalEvent;
 import com.microsoft.band.sensors.BandRRIntervalEventListener;
+import com.microsoft.band.sensors.HeartRateQuality;
 
 import java.util.ArrayList;
 import java.util.Locale;
@@ -32,7 +33,7 @@ public class BandService extends Service {
     private final int ID = 32478611;
     private NotificationManager mNotificationManager;
     private AppendLogger mGsrLogger, mHrLogger, mRrLogger;
-    private int skinResponse, heartRate;
+    private int skinResponse, heartRate, heartRateQuality;
     private double rrInterval;
     private boolean gsr = false;
     private boolean hr = false;
@@ -57,8 +58,9 @@ public class BandService extends Service {
         @Override
         public void onBandGsrChanged(final BandGsrEvent event) {
             if (event != null) {
+                String t = System.currentTimeMillis()+"";
                 skinResponse = event.getResistance();
-                mGsrLogger.log(gsr+"");
+                mGsrLogger.log(t, skinResponse+"");
                 updateStatus();
             }
         }
@@ -67,8 +69,14 @@ public class BandService extends Service {
         @Override
         public void onBandHeartRateChanged(final BandHeartRateEvent event) {
             if (event != null) {
+                String t = System.currentTimeMillis()+"";
+                int quality = 0;
+                HeartRateQuality hrQuality = event.getQuality();
+                if(hrQuality == HeartRateQuality.LOCKED){
+                    quality = 1;
+                }
                 heartRate = event.getHeartRate();
-                mHrLogger.log(heartRate+"");
+                mHrLogger.log(t, heartRate+"", quality+"");
                 updateStatus();
             }
         }
@@ -78,8 +86,9 @@ public class BandService extends Service {
         @Override
         public void onBandRRIntervalChanged(final BandRRIntervalEvent event) {
             if (event != null) {
+                String t = System.currentTimeMillis()+ "";
                 rrInterval = event.getInterval();
-                mRrLogger.log(rrInterval + "");
+                mRrLogger.log(t, rrInterval+"");
                 updateStatus();
             }
         }
@@ -108,7 +117,6 @@ public class BandService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         startForeground(ID, getPersistentServiceNotification("Initializing.."));
-        Log.d(TAG, "Start command three times");
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         Context baseContext = getBaseContext();
         if(intent.hasExtra("sensors")){

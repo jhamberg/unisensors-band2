@@ -2,6 +2,7 @@ package fi.helsinki.cs.unisensors.band2;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.databinding.DataBindingUtil;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -12,21 +13,21 @@ import android.widget.CheckBox;
 
 import java.util.HashMap;
 
+import fi.helsinki.cs.unisensors.band2.databinding.ActivityMainBinding;
+
 public class MainActivity extends AppCompatActivity {
     private final String TAG = this.getClass().getSimpleName();
+    private ActivityMainBinding view;
     private SharedPreferences preferences;
     private Class service;
     private Intent serviceIntent;
-    private Button serviceButton;
-    private CheckBox gsrCheckbox, hrCheckbox, rrCheckbox;
-    private boolean gsr, hr, rr;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         preferences =  PreferenceManager.getDefaultSharedPreferences(this);
-        setContentView(R.layout.activity_main);
+        view = DataBindingUtil.setContentView(this, R.layout.activity_main);
         initLayout();
 
         service = BandService.class;
@@ -34,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
         boolean running = isServiceRunning();
         updateButtonState(running);
 
-        serviceButton.setOnClickListener(new View.OnClickListener() {
+        view.serviceButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 boolean running = isServiceRunning();
@@ -69,25 +70,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void initLayout(){
-        serviceButton = (Button) findViewById(R.id.serviceButton);
-        gsrCheckbox = (CheckBox) findViewById(R.id.gsrBox);
-        hrCheckbox = (CheckBox) findViewById(R.id.hrBox);
-        rrCheckbox = (CheckBox) findViewById(R.id.rrBox);
-
-        gsrCheckbox.setChecked(preferences.getBoolean("gsr", false));
-        hrCheckbox.setChecked(preferences.getBoolean("hr", false));
-        rrCheckbox.setChecked(preferences.getBoolean("rr", false));
+        view.gsrBox.setChecked(preferences.getBoolean("gsr", false));
+        view.hrBox.setChecked(preferences.getBoolean("hr", false));
+        view.rrBox.setChecked(preferences.getBoolean("rr", false));
     }
 
     public boolean[] getSensorSelection(){
         return new boolean[]{
-                gsrCheckbox.isChecked(),
-                hrCheckbox.isChecked(),
-                rrCheckbox.isChecked()};
+                view.gsrBox.isChecked(),
+                view.hrBox.isChecked(),
+                view.rrBox.isChecked()};
     }
 
     public void updateButtonState(boolean running){
-        serviceButton.setText(running ? R.string.stop : R.string.start);
+        view.serviceButton.setText(running ? R.string.stop : R.string.start);
     }
 
     public boolean isServiceRunning(){
