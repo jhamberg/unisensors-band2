@@ -28,9 +28,10 @@ import fi.helsinki.cs.unisensors.band2.io.AppendLogger;
 
 public class BandService extends Service {
     private final String TAG = this.getClass().getSimpleName();
+    private final String DELIM = ";";
     private final int ID = 32478611;
     private NotificationManager mNotificationManager;
-    private AppendLogger mAppendLogger;
+    private AppendLogger mGsrLogger, mHrLogger, mRrLogger;
     private int skinResponse, heartRate;
     private double rrInterval;
     private boolean gsr = false;
@@ -57,7 +58,8 @@ public class BandService extends Service {
         public void onBandGsrChanged(final BandGsrEvent event) {
             if (event != null) {
                 skinResponse = event.getResistance();
-                registerEvent();
+                mGsrLogger.log(gsr+"");
+                updateStatus();
             }
         }
     };
@@ -66,7 +68,8 @@ public class BandService extends Service {
         public void onBandHeartRateChanged(final BandHeartRateEvent event) {
             if (event != null) {
                 heartRate = event.getHeartRate();
-                registerEvent();
+                mHrLogger.log(heartRate+"");
+                updateStatus();
             }
         }
     };
@@ -76,7 +79,8 @@ public class BandService extends Service {
         public void onBandRRIntervalChanged(final BandRRIntervalEvent event) {
             if (event != null) {
                 rrInterval = event.getInterval();
-                registerEvent();
+                mRrLogger.log(rrInterval + "");
+                updateStatus();
             }
         }
     };
@@ -91,7 +95,6 @@ public class BandService extends Service {
     public void onDestroy() {
         Band.disconnect();
         unregisterReceiver(hrConsentReceiver);
-        mAppendLogger.finish();
         mNotificationManager.cancel(ID);
         super.onDestroy();
     }
@@ -105,6 +108,7 @@ public class BandService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         startForeground(ID, getPersistentServiceNotification("Initializing.."));
+        Log.d(TAG, "Start command three times");
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         Context baseContext = getBaseContext();
         if(intent.hasExtra("sensors")){
@@ -112,20 +116,30 @@ public class BandService extends Service {
             gsr = selection[0];
             hr = selection[1];
             rr = selection[2];
-            if(gsr) Band.registerGsrListener(baseContext, gsrListener);
-            if(hr)  Band.registerHrListener(baseContext, hrListener);
-            if(rr)  Band.registerRriListener(baseContext, rriListener);
+            Log.d(TAG, "Gsr: " + gsr + " Hr: " + hr + " Rr: " + rr);
+            long t = System.currentTimeMillis();
+            if(gsr){
+                Band.registerGsrListener(baseContext, gsrListener);
+                mGsrLogger = new AppendLogger(getBaseContext(), "gsr", t, DELIM);
+            }
+            if(hr){
+                Band.registerHrListener(baseContext, hrListener);
+                mHrLogger = new AppendLogger(getBaseContext(), "hr", t, DELIM);
+            }
+            if(rr){
+                Band.registerRriListener(baseContext, rriListener);
+                mRrLogger = new AppendLogger(getBaseContext(), "rr", t, DELIM);
+            }
         }
-        String filename = constructFileName();
-        mAppendLogger = new AppendLogger(getBaseContext(), filename, ";");
         return super.onStartCommand(intent, flags, startId);
     }
 
     public Notification getPersistentServiceNotification(String status){
-        Intent notificationIntent = new Intent(this, MainActivity.class);
-        PendingIntent activityIntent = PendingIntent.getActivity(this, 0, notificationIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+        Context appContext = getApplicationContext();
+        Intent notificationIntent = new Intent(appContext, MainActivity.class);
+        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent activityIntent = PendingIntent.getActivity(appContext, 0, notificationIntent, 0);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(appContext)
                 .setSmallIcon(R.drawable.ic_watch_white_24dp)
                 .setContentTitle(getString(R.string.app_name))
                 .setContentText(status)
@@ -133,27 +147,6 @@ public class BandService extends Service {
                 .setContentIntent(activityIntent);
         return builder.build();
     }
-
-    private void registerEvent(){
-        ArrayList<String> toLog = new ArrayList<>();
-        toLog.add(System.currentTimeMillis() + "");
-        if(gsr) toLog.add(skinResponse + "");
-        if(hr) toLog.add(heartRate + "");
-        if(rr) toLog.add(rrInterval + "");
-        mAppendLogger.log(toLog.toArray(new String[toLog.size()]));
-        updateStatus();
-    }
-
-    private String constructFileName(){
-        String filename = "";
-        if(gsr) filename += "gsr-";
-        if(hr) filename += "hr-";
-        if(rr) filename += "rr-";
-
-        // Remove last hyphen
-        return filename.substring(0,filename.length()-1);
-    }
-
 
     private void updateStatus(){
         String status =

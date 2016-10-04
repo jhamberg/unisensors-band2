@@ -1,6 +1,8 @@
 package fi.helsinki.cs.unisensors.band2;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,7 +14,7 @@ import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = this.getClass().getSimpleName();
-
+    private SharedPreferences preferences;
     private Class service;
     private Intent serviceIntent;
     private Button serviceButton;
@@ -21,12 +23,11 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
+        preferences =  PreferenceManager.getDefaultSharedPreferences(this);
         setContentView(R.layout.activity_main);
-        serviceButton = (Button) findViewById(R.id.serviceButton);
-        gsrCheckbox = (CheckBox) findViewById(R.id.gsrBox);
-        hrCheckbox = (CheckBox) findViewById(R.id.hrBox);
-        rrCheckbox = (CheckBox) findViewById(R.id.rrBox);
+        initLayout();
 
         service = BandService.class;
         serviceIntent = new Intent(MainActivity.this, service);
@@ -43,10 +44,12 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     boolean[] selection = getSensorSelection();
                     for(boolean value : selection){
+                        // Only start if at least one sensor is selected
                         if(value){
                             serviceIntent.putExtra("sensors", selection);
                             startService(serviceIntent);
                             updateButtonState(true);
+                            break;
                         }
                     }
                 }
@@ -54,11 +57,33 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        boolean[] selection = getSensorSelection();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("gsr", selection[0]);
+        editor.putBoolean("hr", selection[1]);
+        editor.putBoolean("rr", selection[2]);
+        editor.apply();
+    }
+
+    public void initLayout(){
+        serviceButton = (Button) findViewById(R.id.serviceButton);
+        gsrCheckbox = (CheckBox) findViewById(R.id.gsrBox);
+        hrCheckbox = (CheckBox) findViewById(R.id.hrBox);
+        rrCheckbox = (CheckBox) findViewById(R.id.rrBox);
+
+        gsrCheckbox.setChecked(preferences.getBoolean("gsr", false));
+        hrCheckbox.setChecked(preferences.getBoolean("hr", false));
+        rrCheckbox.setChecked(preferences.getBoolean("rr", false));
+    }
+
     public boolean[] getSensorSelection(){
-        gsr = gsrCheckbox.isChecked();
-        hr = hrCheckbox.isChecked();
-        rr = rrCheckbox.isChecked();
-        return new boolean[]{gsr, hr, rr};
+        return new boolean[]{
+                gsrCheckbox.isChecked(),
+                hrCheckbox.isChecked(),
+                rrCheckbox.isChecked()};
     }
 
     public void updateButtonState(boolean running){

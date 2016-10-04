@@ -15,10 +15,12 @@ public class AppendLogger {
     private Context context;
     private FileOutputStream output;
     private String delimiter;
+    private long timestamp;
 
-    public AppendLogger(Context context, String fileName, String delimiter) {
+    public AppendLogger(Context context, String fileName, long timestamp, String delimiter) {
         this.context = context;
         this.delimiter = delimiter;
+        this.timestamp = timestamp;
         output = getAppendStream(fileName);
     }
 
@@ -57,15 +59,13 @@ public class AppendLogger {
     @SuppressWarnings("all")
     private FileOutputStream getAppendStream(String fileName){
         try {
-            Long timestamp = System.currentTimeMillis();
-            String folderName = context.getString(R.string.app_name).replace(" ", "");
+            String folderName = context.getString(R.string.app_name).replace(" ", "")+"/"+timestamp;
             File extPath = Environment.getExternalStorageDirectory();
             File folder = new File(extPath, folderName);
-            if(!folder.exists()){
+            if(!folder.exists()) {
                 folder.mkdirs();
             }
-            String name = fileName + "-" + timestamp + ".csv";
-            File output = new File(folder, name);
+            File output = new File(folder, fileName+".csv");
             Log.d(TAG, "Opening file " + output.getAbsolutePath() + " for logging");
             return new FileOutputStream(output, true);
         } catch(Throwable th){
