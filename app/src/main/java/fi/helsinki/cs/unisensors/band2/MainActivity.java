@@ -1,19 +1,27 @@
 package fi.helsinki.cs.unisensors.band2;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.databinding.DataBindingUtil;
 import android.preference.PreferenceManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.InputType;
+import android.text.Layout;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.FrameLayout;
 
 import java.util.HashMap;
 
 import fi.helsinki.cs.unisensors.band2.databinding.ActivityMainBinding;
+import fi.helsinki.cs.unisensors.band2.databinding.InputDialogBinding;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = this.getClass().getSimpleName();
@@ -43,16 +51,7 @@ public class MainActivity extends AppCompatActivity {
                     stopService(serviceIntent);
                     updateButtonState(false);
                 } else {
-                    boolean[] selection = getSensorSelection();
-                    for(boolean value : selection){
-                        // Only start if at least one sensor is selected
-                        if(value){
-                            serviceIntent.putExtra("sensors", selection);
-                            startService(serviceIntent);
-                            updateButtonState(true);
-                            break;
-                        }
-                    }
+                    showSessionNameDialog();
                 }
             }
         });
@@ -72,6 +71,20 @@ public class MainActivity extends AppCompatActivity {
         editor.apply();
     }
 
+    public void startService(String session){
+        boolean[] selection = getSensorSelection();
+        for(boolean value : selection){
+            // Only start if at least one sensor is selected
+            if(value){
+                serviceIntent.putExtra("sensors", selection);
+                serviceIntent.putExtra("session", session);
+                startService(serviceIntent);
+                updateButtonState(true);
+                break;
+            }
+        }
+    }
+
     public void initLayout(){
         view.gsrBox.setChecked(preferences.getBoolean("gsr", false));
         view.hrBox.setChecked(preferences.getBoolean("hr", false));
@@ -79,6 +92,31 @@ public class MainActivity extends AppCompatActivity {
         view.gyroBox.setChecked(preferences.getBoolean("gyro", false));
         view.accBox.setChecked(preferences.getBoolean("acc", false));
         view.baroBox.setChecked(preferences.getBoolean("baro", false));
+    }
+
+    public void showSessionNameDialog(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Session name");
+        LayoutInflater inflater = LayoutInflater.from(getBaseContext());
+        final InputDialogBinding dialogView = DataBindingUtil.inflate(inflater,
+                R.layout.input_dialog, null, false);
+        builder.setView(dialogView
+                .getRoot());
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String session = dialogView.filenameInput.getText().toString();
+                startService(session);
+                dialog.cancel();
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+        builder.show();
     }
 
     public boolean[] getSensorSelection(){

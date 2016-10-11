@@ -38,10 +38,11 @@ public class BandService extends Service {
     private final String DELIM = ";";
     private final int ID = 32478611;
     private NotificationManager mNotificationManager;
+    private String session = null;
     private int skinResponse, heartRate;
     private AppendLogger mGsrLogger, mHrLogger, mRrLogger, mGyroLogger, mAccLogger, mBaroLogger;
     private float accX, accY, accZ;
-    private float gyroaccX, gryoaccY, gryoaccZ, angvelX, angvelY, angvelZ;
+    private float gyroaccX, gyroaccY, gyroaccZ, angvelX, angvelY, angvelZ;
     private double rrInterval;
     private double pressure, temperature;
     private boolean gsr = false;
@@ -112,12 +113,12 @@ public class BandService extends Service {
             if(event != null){
                 String t = System.currentTimeMillis() + "";
                 gyroaccX = event.getAccelerationX();
-                gryoaccY = event.getAccelerationY();
-                gryoaccZ = event.getAccelerationZ();
+                gyroaccY = event.getAccelerationY();
+                gyroaccZ = event.getAccelerationZ();
                 angvelX = event.getAngularVelocityX();
                 angvelY = event.getAngularVelocityY();
                 angvelZ = event.getAngularVelocityZ();
-                mGyroLogger.log(t, gyroaccX +"", gryoaccY +"", gryoaccZ +"",
+                mGyroLogger.log(t, gyroaccX +"", gyroaccY +"", gyroaccZ +"",
                                 angvelX+"", angvelY +"", angvelZ +"");
             }
         }
@@ -144,7 +145,6 @@ public class BandService extends Service {
                 pressure = event.getAirPressure();
                 temperature = event.getTemperature();
                 mBaroLogger.log(t, pressure+"", temperature+"");
-                updateStatus();
             }
         }
     };
@@ -173,6 +173,9 @@ public class BandService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         startForeground(ID, getPersistentServiceNotification("Initializing.."));
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if(intent.hasExtra("session")){
+            session = intent.getStringExtra("session");
+        }
         if(intent.hasExtra("sensors")){
             boolean[] selection = intent.getBooleanArrayExtra("sensors");
             registerListeners(selection);
@@ -189,25 +192,32 @@ public class BandService extends Service {
         acc = selection[4];
         baro = selection[5];
 
-        long t = System.currentTimeMillis();
+        String name = session == null || session.isEmpty() ?
+                System.currentTimeMillis() + "" : session;
         if(gsr) {
             Band.registerGsrListener(baseContext, gsrListener);
-            mGsrLogger = new AppendLogger(baseContext, "gsr", t, DELIM);
+            mGsrLogger = new AppendLogger(baseContext, "gsr", name, DELIM);
         } if(hr) {
             Band.registerHrListener(baseContext, hrListener);
-            mHrLogger = new AppendLogger(baseContext, "hr", t, DELIM);
+            mHrLogger = new AppendLogger(baseContext, "hr", name, DELIM);
         } if(rr) {
             Band.registerRriListener(baseContext, rriListener);
-            mRrLogger = new AppendLogger(baseContext, "rr", t, DELIM);
+            mRrLogger = new AppendLogger(baseContext, "rr", name, DELIM);
         } if(gyro) {
             Band.registerGyroListener(baseContext, gyroListener);
-            mGyroLogger = new AppendLogger(baseContext, "gyro", t, DELIM);
+            mGyroLogger = new AppendLogger(baseContext, "gyro", name, DELIM);
         } if(acc) {
             Band.registerAccListener(baseContext, accListener);
-            mAccLogger = new AppendLogger(baseContext, "acc", t, DELIM);
+            mAccLogger = new AppendLogger(baseContext, "acc", name, DELIM);
         } if(baro) {
             Band.registerBaroListener(baseContext, baroListener);
-            mBaroLogger = new AppendLogger(baseContext, "baro", t, DELIM);
+            mBaroLogger = new AppendLogger(baseContext, "baro", name, DELIM);
+        }
+
+        // Show something even if we are not logging live values
+        if(!gsr && !hr && !rr){
+            String status = "Logging...";
+            mNotificationManager.notify(ID, getPersistentServiceNotification(status));
         }
 
     }
@@ -230,8 +240,8 @@ public class BandService extends Service {
         String status =
                 (gsr ? "GSR: " + skinResponse + " k\u2126 ": "") +
                 (hr ? "HR: " + heartRate + " ": "") +
-                (rr ? String.format(Locale.US, "RR: %.2f ", rrInterval) : "") +
-                (baro ? "B: " + pressure + " " : "");
+                (rr ? String.format(Locale.US, "RR: %.2f ", rrInterval) : ""); // +
+                // (baro ? "B: " + pressure + " " : "");
         mNotificationManager.notify(ID, getPersistentServiceNotification(status));
     }
 

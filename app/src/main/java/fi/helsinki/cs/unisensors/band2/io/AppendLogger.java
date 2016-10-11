@@ -15,9 +15,9 @@ public class AppendLogger {
     private Context context;
     private FileOutputStream output;
     private String delimiter;
-    private long timestamp;
+    private String timestamp;
 
-    public AppendLogger(Context context, String fileName, long timestamp, String delimiter) {
+    public AppendLogger(Context context, String fileName, String timestamp, String delimiter) {
         this.context = context;
         this.delimiter = delimiter;
         this.timestamp = timestamp;

@@ -10,4 +10,5 @@
     <string name="gyroscope">Gyroscope</string>
     <string name="accelerometer">Accelerometer</string>
     <string name="barometer">Barometer</string>
+    <string name="enter_session_name">Enter session name</string>
 </resources>
