@@ -13,9 +13,9 @@
 
 ## Logging and format
 
-Logfiles are stored under the folder *Band2Monitor* in device's main storage. For every session, you will be prompted a session/subfolder name. All logfiles can then be found under this subfolder (*/Band2Monitor/<Subfolder/*). Please refer to shorthand names listed above *(GSR, HR...)* when looking for a specific logfile.
+Logfiles are stored under the folder *Band2Monitor* in device's main storage. For every session, you will be prompted a session/subfolder name. All logfiles can then be found under this subfolder (*/Band2Monitor/&lt;Subfolder&gt;/*). Please refer to shorthand names listed above *(GSR, HR...)* when looking for a specific logfile.
 
-**Format**: Every logfile begins with a timestamp (Epoch time) and is delimited by semicolons. 
+**Format**: Every row in a logfile begins with a timestamp (Epoch time) and is delimited by semicolons. 
 
 ## Build instructions
 
