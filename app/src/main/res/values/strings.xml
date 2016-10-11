@@ -9,4 +9,5 @@
     <string name="gsr">GSR</string>
     <string name="gyroscope">Gyroscope</string>
     <string name="accelerometer">Accelerometer</string>
+    <string name="barometer">Barometer</string>
 </resources>

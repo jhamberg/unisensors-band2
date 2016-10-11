@@ -13,6 +13,8 @@ import com.microsoft.band.BandInfo;
 import com.microsoft.band.ConnectionState;
 import com.microsoft.band.UserConsent;
 import com.microsoft.band.sensors.BandAccelerometerEventListener;
+import com.microsoft.band.sensors.BandBarometerEvent;
+import com.microsoft.band.sensors.BandBarometerEventListener;
 import com.microsoft.band.sensors.BandGsrEventListener;
 import com.microsoft.band.sensors.BandGyroscopeEventListener;
 import com.microsoft.band.sensors.BandHeartRateEventListener;
@@ -47,6 +49,10 @@ public class Band {
 
     public static void registerAccListener(Context context, BandAccelerometerEventListener listener){
         new AccelerometerSubscriptionTask(context, listener).execute();
+    }
+
+    public static void registerBaroListener(Context context, BandBarometerEventListener listener){
+        new BarometerSubscriptionTask(context, listener).execute();
     }
 
     @SuppressWarnings("unchecked")
@@ -260,6 +266,32 @@ public class Band {
             try {
                 if (getConnectedBandClient(context)) {
                     client.getSensorManager().registerAccelerometerEventListener(listener, SampleRate.MS16);
+                } else {
+                    Log.e(TAG, ERR_NOT_CONNECTED);
+                }
+            } catch (BandException e) {
+                logBandException(e);
+            } catch (Exception e) {
+                Log.e(TAG, "Generic error when subscribing to Gyro: " + e.getMessage());
+            }
+            return null;
+        }
+    }
+
+    private static class BarometerSubscriptionTask extends AsyncTask<Void, Void, Void> {
+        private Context context;
+        private BandBarometerEventListener listener;
+
+        BarometerSubscriptionTask(Context context, BandBarometerEventListener listener){
+            this.context = context;
+            this.listener = listener;
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            try {
+                if (getConnectedBandClient(context)) {
+                    client.getSensorManager().registerBarometerEventListener(listener);
                 } else {
                     Log.e(TAG, ERR_NOT_CONNECTED);
                 }

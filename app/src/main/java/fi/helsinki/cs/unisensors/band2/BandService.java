@@ -16,6 +16,8 @@ import android.util.Log;
 
 import com.microsoft.band.sensors.BandAccelerometerEvent;
 import com.microsoft.band.sensors.BandAccelerometerEventListener;
+import com.microsoft.band.sensors.BandBarometerEvent;
+import com.microsoft.band.sensors.BandBarometerEventListener;
 import com.microsoft.band.sensors.BandGsrEvent;
 import com.microsoft.band.sensors.BandGsrEventListener;
 import com.microsoft.band.sensors.BandGyroscopeEvent;
@@ -37,15 +39,17 @@ public class BandService extends Service {
     private final int ID = 32478611;
     private NotificationManager mNotificationManager;
     private int skinResponse, heartRate;
-    private AppendLogger mGsrLogger, mHrLogger, mRrLogger, mGyroLogger, mAccLogger;
+    private AppendLogger mGsrLogger, mHrLogger, mRrLogger, mGyroLogger, mAccLogger, mBaroLogger;
     private float accX, accY, accZ;
     private float gyroaccX, gryoaccY, gryoaccZ, angvelX, angvelY, angvelZ;
     private double rrInterval;
+    private double pressure, temperature;
     private boolean gsr = false;
     private boolean hr = false;
     private boolean rr = false;
     private boolean gyro = false;
     private boolean acc = false;
+    private boolean baro = false;
 
     private BroadcastReceiver hrConsentReceiver = new BroadcastReceiver(){
         @Override
@@ -132,6 +136,19 @@ public class BandService extends Service {
         }
     };
 
+    private BandBarometerEventListener baroListener = new BandBarometerEventListener() {
+        @Override
+        public void onBandBarometerChanged(BandBarometerEvent event) {
+            if(event != null){
+                String t = System.currentTimeMillis() + "";
+                pressure = event.getAirPressure();
+                temperature = event.getTemperature();
+                mBaroLogger.log(t, pressure+"", temperature+"");
+                updateStatus();
+            }
+        }
+    };
+
     @Override
     public void onCreate() {
         registerReceiver(hrConsentReceiver, new IntentFilter(Band.CONSENT));
@@ -170,23 +187,27 @@ public class BandService extends Service {
         rr = selection[2];
         gyro = selection[3];
         acc = selection[4];
+        baro = selection[5];
 
         long t = System.currentTimeMillis();
-        if(gsr){
+        if(gsr) {
             Band.registerGsrListener(baseContext, gsrListener);
-            mGsrLogger = new AppendLogger(getBaseContext(), "gsr", t, DELIM);
-        } if(hr){
+            mGsrLogger = new AppendLogger(baseContext, "gsr", t, DELIM);
+        } if(hr) {
             Band.registerHrListener(baseContext, hrListener);
-            mHrLogger = new AppendLogger(getBaseContext(), "hr", t, DELIM);
-        } if(rr){
+            mHrLogger = new AppendLogger(baseContext, "hr", t, DELIM);
+        } if(rr) {
             Band.registerRriListener(baseContext, rriListener);
-            mRrLogger = new AppendLogger(getBaseContext(), "rr", t, DELIM);
-        } if(gyro){
+            mRrLogger = new AppendLogger(baseContext, "rr", t, DELIM);
+        } if(gyro) {
             Band.registerGyroListener(baseContext, gyroListener);
-            mGyroLogger = new AppendLogger(getBaseContext(), "gyro", t, DELIM);
-        } if(acc){
+            mGyroLogger = new AppendLogger(baseContext, "gyro", t, DELIM);
+        } if(acc) {
             Band.registerAccListener(baseContext, accListener);
-            mAccLogger = new AppendLogger(getBaseContext(), "acc", t, DELIM);
+            mAccLogger = new AppendLogger(baseContext, "acc", t, DELIM);
+        } if(baro) {
+            Band.registerBaroListener(baseContext, baroListener);
+            mBaroLogger = new AppendLogger(baseContext, "baro", t, DELIM);
         }
 
     }
@@ -209,7 +230,8 @@ public class BandService extends Service {
         String status =
                 (gsr ? "GSR: " + skinResponse + " k\u2126 ": "") +
                 (hr ? "HR: " + heartRate + " ": "") +
-                (rr ? String.format(Locale.US, "RR: %.2f ", rrInterval) : "");
+                (rr ? String.format(Locale.US, "RR: %.2f ", rrInterval) : "") +
+                (baro ? "B: " + pressure + " " : "");
         mNotificationManager.notify(ID, getPersistentServiceNotification(status));
     }
 
