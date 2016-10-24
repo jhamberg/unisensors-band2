@@ -13,6 +13,8 @@ import com.microsoft.band.BandInfo;
 import com.microsoft.band.ConnectionState;
 import com.microsoft.band.UserConsent;
 import com.microsoft.band.sensors.BandAccelerometerEventListener;
+import com.microsoft.band.sensors.BandAltimeterEvent;
+import com.microsoft.band.sensors.BandAltimeterEventListener;
 import com.microsoft.band.sensors.BandAmbientLightEventListener;
 import com.microsoft.band.sensors.BandBarometerEventListener;
 import com.microsoft.band.sensors.BandGsrEventListener;
@@ -69,6 +71,10 @@ public class Band {
 
     public static void registerUvListener(Context context, BandUVEventListener listener) {
         new UvSubscriptionTask(context, listener).execute();
+    }
+
+    public static void registerAltiListener(Context context, BandAltimeterEventListener listener){
+        new AltimeterSubscriptionTask(context, listener).execute();
     }
 
     @SuppressWarnings("unchecked")
@@ -386,6 +392,32 @@ public class Band {
             try {
                 if (getConnectedBandClient(context)) {
                     client.getSensorManager().registerSkinTemperatureEventListener(listener);
+                } else {
+                    Log.e(TAG, ERR_NOT_CONNECTED);
+                }
+            } catch (BandException e) {
+                logBandException(e);
+            } catch (Exception e) {
+                Log.e(TAG, "Generic error when subscribing to Skin temperature: " + e.getMessage());
+            }
+            return null;
+        }
+    }
+
+    private static class AltimeterSubscriptionTask extends AsyncTask<Void, Void, Void> {
+        private Context context;
+        private BandAltimeterEventListener listener;
+
+        AltimeterSubscriptionTask(Context context, BandAltimeterEventListener listener){
+            this.context = context;
+            this.listener = listener;
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            try {
+                if (getConnectedBandClient(context)) {
+                    client.getSensorManager().registerAltimeterEventListener(listener);
                 } else {
                     Log.e(TAG, ERR_NOT_CONNECTED);
                 }

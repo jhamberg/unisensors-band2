@@ -10,9 +10,10 @@
 | Gyroscope (GYRO)             | acceleration, angular velocity | 16ms          | Logging format: ax;ay;az;vx;vy;vz                                                                                                    |
 | Accelerometer (ACC)          | acceleration                   | 16ms          | Logging format: ax;ay;az                                                                                                             |
 | Barometer (BARO)             | mBar, ºC                       | ~1s           | Pressure readings seem to jump quite a bit.<br>Logging format: pressure;temperature                                                  |
-| Ambient Light (AMBIENT)      | lux                            | ~500ms        | Sensor is on the same side with the display, not facing the skin                                                                     |
+| Ambient light (AMBIENT)      | lux                            | ~500ms        | Sensor is on the same side with the display, not facing the skin                                                                     |
 | UV Sensor (UV)               | level (0-6), average today     | Event based   | This sensor has very coarse accuracy and reports in levels.<br>Logging format: lvl;avg                                               | 
-| Skin temperature (SKIN)      | ºC                             | 30s           | Not same as barometer. Greatly limited in polling speed.                                                                             |
+| Skin temperature (SKIN)      | ºC                             | ~30s          | Not same as barometer. Please note the slow sampling rate.                                                                           |
+| Altimeter (ALTI)             | rate in centimeters            | ~1s           | Use barometer for more extensive readings.                                                                                           |
 
 ## Logging and format
 

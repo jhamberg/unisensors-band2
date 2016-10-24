@@ -90,12 +90,21 @@
             android:layout_below="@+id/uvBox"
             android:layout_alignParentStart="true" />
 
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/altimeter"
+            android:id="@+id/altiBox"
+            android:checked="false"
+            android:layout_below="@+id/skinBox"
+            android:layout_alignParentStart="true" />
+
         <Button
             android:text="@string/start"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/serviceButton"
-            android:layout_below="@+id/skinBox"
+            android:layout_below="@+id/altiBox"
             android:layout_alignParentStart="true" />
 
     </RelativeLayout>
