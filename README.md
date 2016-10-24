@@ -10,6 +10,7 @@
 | Gyroscope (GYRO)             | acceleration, angular velocity | 16ms          | Logging format: ax;ay;az;vx;vy;vz                                                                                                    |
 | Accelerometer (ACC)          | acceleration                   | 16ms          | Logging format: ax;ay;az                                                                                                             |
 | Barometer (BARO)             | mBar, ºC                       | ~1s           | Pressure readings seem to jump quite a bit.<br>Logging format: pressure;temperature                                                  |
+| Ambient Light (AMBIENT)      | lux                            | ~400-600 ms   | Ambient light sensor is on the same side with the display, not facing the skin                                                       |
 
 ## Logging and format
 
