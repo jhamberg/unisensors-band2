@@ -29,6 +29,8 @@ import com.microsoft.band.sensors.BandHeartRateEvent;
 import com.microsoft.band.sensors.BandHeartRateEventListener;
 import com.microsoft.band.sensors.BandRRIntervalEvent;
 import com.microsoft.band.sensors.BandRRIntervalEventListener;
+import com.microsoft.band.sensors.BandSkinTemperatureEvent;
+import com.microsoft.band.sensors.BandSkinTemperatureEventListener;
 import com.microsoft.band.sensors.BandUVEvent;
 import com.microsoft.band.sensors.BandUVEventListener;
 import com.microsoft.band.sensors.HeartRateQuality;
@@ -47,7 +49,7 @@ public class BandService extends Service {
     private String session = null;
     private int skinResponse, heartRate;
     private AppendLogger mGsrLogger, mHrLogger, mRrLogger, mGyroLogger,
-            mAccLogger, mBaroLogger, mAmbientLogger, mUvLogger;
+            mAccLogger, mBaroLogger, mAmbientLogger, mUvLogger, mSkinLogger;
     private float accX, accY, accZ;
     private float gyroaccX, gyroaccY, gyroaccZ, angvelX, angvelY, angvelZ;
     private double rrInterval;
@@ -55,7 +57,8 @@ public class BandService extends Service {
     private int brightness;
     private long uvToday;
     private int uvLevel;
-    private boolean gsr, hr, rr, gyro, acc, baro, ambient, uv;
+    private float skinTemp;
+    private boolean gsr, hr, rr, gyro, acc, baro, ambient, uv, skin;
 
     private BroadcastReceiver hrConsentReceiver = new BroadcastReceiver(){
         @Override
@@ -150,6 +153,7 @@ public class BandService extends Service {
                 pressure = event.getAirPressure();
                 temperature = event.getTemperature();
                 mBaroLogger.log(t, pressure+"", temperature+"");
+                Log.d(TAG, "Barotemp: " + temperature);
             }
         }
     };
@@ -161,6 +165,18 @@ public class BandService extends Service {
                 String t = event.getTimestamp() + "";
                 brightness = event.getBrightness();
                 mAmbientLogger.log(t, brightness+"");
+            }
+        }
+    };
+
+    private BandSkinTemperatureEventListener skinListener = new BandSkinTemperatureEventListener() {
+        @Override
+        public void onBandSkinTemperatureChanged(BandSkinTemperatureEvent event) {
+            if(event != null){
+                String t = event.getTimestamp() + "";
+                skinTemp = event.getTemperature();
+                mSkinLogger.log(t, skinTemp + "");
+                Log.d(TAG, "Skintemp: " + skinTemp);
             }
         }
     };
@@ -226,6 +242,7 @@ public class BandService extends Service {
         baro = selection[5];
         ambient = selection[6];
         uv = selection[7];
+        skin = selection[8];
 
         String name = session == null || session.isEmpty() ?
                 System.currentTimeMillis() + "" : session;
@@ -251,9 +268,11 @@ public class BandService extends Service {
             Band.registerAmbientListener(baseContext, ambientListener);
             mAmbientLogger = new AppendLogger(baseContext, "ambient", name, DELIM);
         } if(uv) {
-            Log.d(TAG, "registerting uv");
             Band.registerUvListener(baseContext, uvListener);
             mUvLogger = new AppendLogger(baseContext, "uv", name, DELIM);
+        } if(skin){
+            Band.registerSkinListener(baseContext, skinListener);
+            mSkinLogger = new AppendLogger(baseContext, "skin", name, DELIM);
         }
 
         // Show something even if we are not logging live values

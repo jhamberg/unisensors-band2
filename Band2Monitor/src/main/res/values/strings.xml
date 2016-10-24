@@ -13,4 +13,5 @@
     <string name="enter_session_name">Enter session name</string>
     <string name="ambient_light">Ambient light</string>
     <string name="uv_sensor">UV Sensor</string>
+    <string name="skin_temperature">Skin temperature</string>
 </resources>

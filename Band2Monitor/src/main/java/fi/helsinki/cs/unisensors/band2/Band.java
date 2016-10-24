@@ -63,6 +63,10 @@ public class Band {
         new AmbientLightSubscriptionTask(context, listener).execute();
     }
 
+    public static void registerSkinListener(Context context, BandSkinTemperatureEventListener listener){
+        new SkinTemperatureSubscriptionTask(context, listener).execute();
+    }
+
     public static void registerUvListener(Context context, BandUVEventListener listener) {
         new UvSubscriptionTask(context, listener).execute();
     }
@@ -363,6 +367,32 @@ public class Band {
                 logBandException(e);
             } catch (Exception e) {
                 Log.e(TAG, "Generic error when subscribing to UV: " + e.getMessage());
+            }
+            return null;
+        }
+    }
+
+    private static class SkinTemperatureSubscriptionTask extends AsyncTask<Void, Void, Void> {
+        private Context context;
+        private BandSkinTemperatureEventListener listener;
+
+        SkinTemperatureSubscriptionTask(Context context, BandSkinTemperatureEventListener listener){
+            this.context = context;
+            this.listener = listener;
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            try {
+                if (getConnectedBandClient(context)) {
+                    client.getSensorManager().registerSkinTemperatureEventListener(listener);
+                } else {
+                    Log.e(TAG, ERR_NOT_CONNECTED);
+                }
+            } catch (BandException e) {
+                logBandException(e);
+            } catch (Exception e) {
+                Log.e(TAG, "Generic error when subscribing to Skin temperature: " + e.getMessage());
             }
             return null;
         }

@@ -167,6 +167,7 @@ public class MainActivity extends AppCompatActivity {
         editor.putBoolean("baro", selection[5]);
         editor.putBoolean("ambient", selection[6]);
         editor.putBoolean("uv", selection[7]);
+        editor.putBoolean("skin", selection[8]);
         editor.apply();
     }
 
@@ -192,6 +193,8 @@ public class MainActivity extends AppCompatActivity {
         view.accBox.setChecked(preferences.getBoolean("acc", false));
         view.baroBox.setChecked(preferences.getBoolean("baro", false));
         view.ambientBox.setChecked(preferences.getBoolean("ambient", false));
+        view.uvBox.setChecked(preferences.getBoolean("uv", false));
+        view.skinBox.setChecked(preferences.getBoolean("skin", false));
     }
 
     public void showSessionNameDialog(){
@@ -228,7 +231,8 @@ public class MainActivity extends AppCompatActivity {
                 view.accBox.isChecked(),
                 view.baroBox.isChecked(),
                 view.ambientBox.isChecked(),
-                view.uvBox.isChecked()
+                view.uvBox.isChecked(),
+                view.skinBox.isChecked()
         };
     }
 
