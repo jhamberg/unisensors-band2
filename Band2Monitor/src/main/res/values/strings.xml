@@ -11,4 +11,5 @@
     <string name="accelerometer">Accelerometer</string>
     <string name="barometer">Barometer</string>
     <string name="enter_session_name">Enter session name</string>
+    <string name="ambient_light">Ambient light</string>
 </resources>

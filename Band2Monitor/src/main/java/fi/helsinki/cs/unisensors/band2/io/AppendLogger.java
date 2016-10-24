@@ -6,6 +6,7 @@ import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.Arrays;
 
 import fi.helsinki.cs.unisensors.band2.R;
 

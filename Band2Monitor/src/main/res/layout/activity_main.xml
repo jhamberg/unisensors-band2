@@ -63,12 +63,21 @@
             android:layout_below="@+id/accBox"
             android:layout_alignParentStart="true" />
 
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/ambient_light"
+            android:id="@+id/ambientBox"
+            android:checked="false"
+            android:layout_below="@+id/baroBox"
+            android:layout_alignParentStart="true" />
+
         <Button
             android:text="@string/start"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/serviceButton"
-            android:layout_below="@+id/baroBox"
+            android:layout_below="@+id/ambientBox"
             android:layout_alignParentStart="true" />
 
     </RelativeLayout>

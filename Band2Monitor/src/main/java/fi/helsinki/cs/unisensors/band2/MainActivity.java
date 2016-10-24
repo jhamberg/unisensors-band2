@@ -68,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
         editor.putBoolean("gyro", selection[3]);
         editor.putBoolean("acc", selection[4]);
         editor.putBoolean("baro", selection[5]);
+        editor.putBoolean("ambient", selection[6]);
         editor.apply();
     }
 
@@ -92,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
         view.gyroBox.setChecked(preferences.getBoolean("gyro", false));
         view.accBox.setChecked(preferences.getBoolean("acc", false));
         view.baroBox.setChecked(preferences.getBoolean("baro", false));
+        view.ambientBox.setChecked(preferences.getBoolean("ambient", false));
     }
 
     public void showSessionNameDialog(){
@@ -126,7 +128,9 @@ public class MainActivity extends AppCompatActivity {
                 view.rrBox.isChecked(),
                 view.gyroBox.isChecked(),
                 view.accBox.isChecked(),
-                view.baroBox.isChecked()};
+                view.baroBox.isChecked(),
+                view.ambientBox.isChecked()
+        };
     }
 
 

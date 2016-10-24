@@ -16,6 +16,8 @@ import android.util.Log;
 
 import com.microsoft.band.sensors.BandAccelerometerEvent;
 import com.microsoft.band.sensors.BandAccelerometerEventListener;
+import com.microsoft.band.sensors.BandAmbientLightEvent;
+import com.microsoft.band.sensors.BandAmbientLightEventListener;
 import com.microsoft.band.sensors.BandBarometerEvent;
 import com.microsoft.band.sensors.BandBarometerEventListener;
 import com.microsoft.band.sensors.BandGsrEvent;
@@ -40,17 +42,20 @@ public class BandService extends Service {
     private NotificationManager mNotificationManager;
     private String session = null;
     private int skinResponse, heartRate;
-    private AppendLogger mGsrLogger, mHrLogger, mRrLogger, mGyroLogger, mAccLogger, mBaroLogger;
+    private AppendLogger mGsrLogger, mHrLogger, mRrLogger, mGyroLogger,
+            mAccLogger, mBaroLogger, mAmbientLogger;
     private float accX, accY, accZ;
     private float gyroaccX, gyroaccY, gyroaccZ, angvelX, angvelY, angvelZ;
     private double rrInterval;
     private double pressure, temperature;
+    private int brightness;
     private boolean gsr = false;
     private boolean hr = false;
     private boolean rr = false;
     private boolean gyro = false;
     private boolean acc = false;
     private boolean baro = false;
+    private boolean ambient = false;
 
     private BroadcastReceiver hrConsentReceiver = new BroadcastReceiver(){
         @Override
@@ -149,6 +154,17 @@ public class BandService extends Service {
         }
     };
 
+    private BandAmbientLightEventListener ambientListener = new BandAmbientLightEventListener() {
+        @Override
+        public void onBandAmbientLightChanged(BandAmbientLightEvent event) {
+            if(event != null){
+                String t = System.currentTimeMillis() + "";
+                brightness = event.getBrightness();
+                mAmbientLogger.log(t, brightness+"", temperature+"");
+            }
+        }
+    };
+
     @Override
     public void onCreate() {
         registerReceiver(hrConsentReceiver, new IntentFilter(Band.CONSENT));
@@ -191,6 +207,7 @@ public class BandService extends Service {
         gyro = selection[3];
         acc = selection[4];
         baro = selection[5];
+        ambient = selection[6];
 
         String name = session == null || session.isEmpty() ?
                 System.currentTimeMillis() + "" : session;
@@ -212,6 +229,9 @@ public class BandService extends Service {
         } if(baro) {
             Band.registerBaroListener(baseContext, baroListener);
             mBaroLogger = new AppendLogger(baseContext, "baro", name, DELIM);
+        } if(ambient) {
+            Band.registerAmbientListener(baseContext, ambientListener);
+            mAmbientLogger = new AppendLogger(baseContext, "ambient", name, DELIM);
         }
 
         // Show something even if we are not logging live values
@@ -219,7 +239,6 @@ public class BandService extends Service {
             String status = "Logging...";
             mNotificationManager.notify(ID, getPersistentServiceNotification(status));
         }
-
     }
 
     public Notification getPersistentServiceNotification(String status){
