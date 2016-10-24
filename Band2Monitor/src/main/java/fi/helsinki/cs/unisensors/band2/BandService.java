@@ -76,7 +76,7 @@ public class BandService extends Service {
         @Override
         public void onBandGsrChanged(final BandGsrEvent event) {
             if (event != null) {
-                String t = System.currentTimeMillis()+"";
+                String t = event.getTimestamp()+"";
                 skinResponse = event.getResistance();
                 mGsrLogger.log(t, skinResponse+"");
                 updateStatus();
@@ -87,7 +87,7 @@ public class BandService extends Service {
         @Override
         public void onBandHeartRateChanged(final BandHeartRateEvent event) {
             if (event != null) {
-                String t = System.currentTimeMillis()+"";
+                String t = event.getTimestamp()+"";
                 int quality = 0;
                 HeartRateQuality hrQuality = event.getQuality();
                 if(hrQuality == HeartRateQuality.LOCKED){
@@ -104,7 +104,7 @@ public class BandService extends Service {
         @Override
         public void onBandRRIntervalChanged(final BandRRIntervalEvent event) {
             if (event != null) {
-                String t = System.currentTimeMillis()+ "";
+                String t = event.getTimestamp() + "";
                 rrInterval = event.getInterval();
                 mRrLogger.log(t, rrInterval+"");
                 updateStatus();
@@ -116,7 +116,7 @@ public class BandService extends Service {
         @Override
         public void onBandGyroscopeChanged(BandGyroscopeEvent event) {
             if(event != null){
-                String t = System.currentTimeMillis() + "";
+                String t = event.getTimestamp() + "";
                 gyroaccX = event.getAccelerationX();
                 gyroaccY = event.getAccelerationY();
                 gyroaccZ = event.getAccelerationZ();
@@ -133,7 +133,7 @@ public class BandService extends Service {
         @Override
         public void onBandAccelerometerChanged(BandAccelerometerEvent event) {
             if(event != null){
-                String t = System.currentTimeMillis() + "";
+                String t = event.getTimestamp() + "";
                 accX = event.getAccelerationX();
                 accY = event.getAccelerationY();
                 accZ = event.getAccelerationZ();
@@ -146,7 +146,7 @@ public class BandService extends Service {
         @Override
         public void onBandBarometerChanged(BandBarometerEvent event) {
             if(event != null){
-                String t = System.currentTimeMillis() + "";
+                String t = event.getTimestamp() + "";
                 pressure = event.getAirPressure();
                 temperature = event.getTemperature();
                 mBaroLogger.log(t, pressure+"", temperature+"");
@@ -158,9 +158,10 @@ public class BandService extends Service {
         @Override
         public void onBandAmbientLightChanged(BandAmbientLightEvent event) {
             if(event != null){
-                String t = System.currentTimeMillis() + "";
+                String t = event.getTimestamp() + "";
                 brightness = event.getBrightness();
-                mAmbientLogger.log(t, brightness+"", temperature+"");
+                mAmbientLogger.log(t, brightness+"");
+                updateStatus();
             }
         }
     };
@@ -256,11 +257,12 @@ public class BandService extends Service {
     }
 
     private void updateStatus(){
-        String status =
+        String status = "Ambient : " + brightness;
+                /*
                 (gsr ? "GSR: " + skinResponse + " k\u2126 ": "") +
                 (hr ? "HR: " + heartRate + " ": "") +
                 (rr ? String.format(Locale.US, "RR: %.2f ", rrInterval) : ""); // +
-                // (baro ? "B: " + pressure + " " : "");
+                // (baro ? "B: " + pressure + " " : "");*/
         mNotificationManager.notify(ID, getPersistentServiceNotification(status));
     }
 
