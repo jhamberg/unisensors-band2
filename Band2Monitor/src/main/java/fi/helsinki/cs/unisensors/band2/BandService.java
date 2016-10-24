@@ -14,6 +14,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import com.microsoft.band.InvalidBandVersionException;
 import com.microsoft.band.sensors.BandAccelerometerEvent;
 import com.microsoft.band.sensors.BandAccelerometerEventListener;
 import com.microsoft.band.sensors.BandAmbientLightEvent;
@@ -28,7 +29,10 @@ import com.microsoft.band.sensors.BandHeartRateEvent;
 import com.microsoft.band.sensors.BandHeartRateEventListener;
 import com.microsoft.band.sensors.BandRRIntervalEvent;
 import com.microsoft.band.sensors.BandRRIntervalEventListener;
+import com.microsoft.band.sensors.BandUVEvent;
+import com.microsoft.band.sensors.BandUVEventListener;
 import com.microsoft.band.sensors.HeartRateQuality;
+import com.microsoft.band.sensors.UVIndexLevel;
 
 import java.util.Locale;
 
@@ -43,19 +47,15 @@ public class BandService extends Service {
     private String session = null;
     private int skinResponse, heartRate;
     private AppendLogger mGsrLogger, mHrLogger, mRrLogger, mGyroLogger,
-            mAccLogger, mBaroLogger, mAmbientLogger;
+            mAccLogger, mBaroLogger, mAmbientLogger, mUvLogger;
     private float accX, accY, accZ;
     private float gyroaccX, gyroaccY, gyroaccZ, angvelX, angvelY, angvelZ;
     private double rrInterval;
     private double pressure, temperature;
     private int brightness;
-    private boolean gsr = false;
-    private boolean hr = false;
-    private boolean rr = false;
-    private boolean gyro = false;
-    private boolean acc = false;
-    private boolean baro = false;
-    private boolean ambient = false;
+    private long uvToday;
+    private int uvLevel;
+    private boolean gsr, hr, rr, gyro, acc, baro, ambient, uv;
 
     private BroadcastReceiver hrConsentReceiver = new BroadcastReceiver(){
         @Override
@@ -161,7 +161,23 @@ public class BandService extends Service {
                 String t = event.getTimestamp() + "";
                 brightness = event.getBrightness();
                 mAmbientLogger.log(t, brightness+"");
-                updateStatus();
+            }
+        }
+    };
+
+    private BandUVEventListener uvListener = new BandUVEventListener() {
+        @Override
+        public void onBandUVChanged(BandUVEvent event) {
+            if(event != null){
+                String t = event.getTimestamp() + "";
+                try {
+                    uvToday = event.getUVExposureToday();
+                } catch (InvalidBandVersionException e) {
+                    Log.d(TAG, "Failed reading today's UV exposure!");
+                    e.printStackTrace();
+                }
+                uvLevel = event.getUVIndexLevel().ordinal();
+                mUvLogger.log(t, uvLevel+"", uvToday+"");;
             }
         }
     };
@@ -209,6 +225,7 @@ public class BandService extends Service {
         acc = selection[4];
         baro = selection[5];
         ambient = selection[6];
+        uv = selection[7];
 
         String name = session == null || session.isEmpty() ?
                 System.currentTimeMillis() + "" : session;
@@ -233,6 +250,10 @@ public class BandService extends Service {
         } if(ambient) {
             Band.registerAmbientListener(baseContext, ambientListener);
             mAmbientLogger = new AppendLogger(baseContext, "ambient", name, DELIM);
+        } if(uv) {
+            Log.d(TAG, "registerting uv");
+            Band.registerUvListener(baseContext, uvListener);
+            mUvLogger = new AppendLogger(baseContext, "uv", name, DELIM);
         }
 
         // Show something even if we are not logging live values
@@ -257,12 +278,11 @@ public class BandService extends Service {
     }
 
     private void updateStatus(){
-        String status = "Ambient : " + brightness;
-                /*
+        String status =
                 (gsr ? "GSR: " + skinResponse + " k\u2126 ": "") +
                 (hr ? "HR: " + heartRate + " ": "") +
                 (rr ? String.format(Locale.US, "RR: %.2f ", rrInterval) : ""); // +
-                // (baro ? "B: " + pressure + " " : "");*/
+                // (baro ? "B: " + pressure + " " : "");
         mNotificationManager.notify(ID, getPersistentServiceNotification(status));
     }
 

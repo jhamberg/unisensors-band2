@@ -14,18 +14,21 @@ import com.microsoft.band.ConnectionState;
 import com.microsoft.band.UserConsent;
 import com.microsoft.band.sensors.BandAccelerometerEventListener;
 import com.microsoft.band.sensors.BandAmbientLightEventListener;
-import com.microsoft.band.sensors.BandBarometerEvent;
 import com.microsoft.band.sensors.BandBarometerEventListener;
 import com.microsoft.band.sensors.BandGsrEventListener;
 import com.microsoft.band.sensors.BandGyroscopeEventListener;
 import com.microsoft.band.sensors.BandHeartRateEventListener;
 import com.microsoft.band.sensors.BandRRIntervalEventListener;
+import com.microsoft.band.sensors.BandSkinTemperatureEvent;
+import com.microsoft.band.sensors.BandSkinTemperatureEventListener;
+import com.microsoft.band.sensors.BandUVEventListener;
 import com.microsoft.band.sensors.GsrSampleRate;
 import com.microsoft.band.sensors.HeartRateConsentListener;
 import com.microsoft.band.sensors.SampleRate;
 
 import java.lang.ref.WeakReference;
 
+@SuppressWarnings("FieldCanBeLocal")
 public class Band {
     public final static String CONSENT = "fi.helsinki.cs.unisensors.band2.CONSENT";
     private static String TAG = Band.class.getSimpleName();
@@ -58,6 +61,10 @@ public class Band {
 
     public static void registerAmbientListener(Context context, BandAmbientLightEventListener listener){
         new AmbientLightSubscriptionTask(context, listener).execute();
+    }
+
+    public static void registerUvListener(Context context, BandUVEventListener listener) {
+        new UvSubscriptionTask(context, listener).execute();
     }
 
     @SuppressWarnings("unchecked")
@@ -335,6 +342,31 @@ public class Band {
         }
     }
 
+    private static class UvSubscriptionTask extends AsyncTask<Void, Void, Void> {
+        private Context context;
+        private BandUVEventListener listener;
+
+        UvSubscriptionTask(Context context, BandUVEventListener listener){
+            this.context = context;
+            this.listener = listener;
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            try {
+                if (getConnectedBandClient(context)) {
+                    client.getSensorManager().registerUVEventListener(listener);
+                } else {
+                    Log.e(TAG, ERR_NOT_CONNECTED);
+                }
+            } catch (BandException e) {
+                logBandException(e);
+            } catch (Exception e) {
+                Log.e(TAG, "Generic error when subscribing to UV: " + e.getMessage());
+            }
+            return null;
+        }
+    }
 
     private static class HrConsentTask extends AsyncTask<WeakReference<Activity>, Void, Void> {
         private Context context;
